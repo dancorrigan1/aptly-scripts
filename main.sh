@@ -10,12 +10,13 @@
 # clean up old snapshots
 #
 # 20170606 - Initial creation
+# 20170607 - Added initialmirrors function
 #
 ##########################################################
 
 # usage
 usage() {
-   echo "usage: $0 updatedev, updateprod, updatemirrors, removesnapshots YYYYMMDD"
+   echo "usage: $0 initialmirrors, updatedev, updateprod, updatemirrors, removesnapshots YYYYMMDD"
    exit 0
 }
 
@@ -45,10 +46,21 @@ update_from_remote_mirrors() {
    done
 }
 
+create_initial_mirrors() {
+   distros=(trusty xenial)
+   for distro in ${distros[@]}; do
+      aptly mirror create -architectures="amd64" ${distro}-main http://us.archive.ubuntu.com/ubuntu/ ${distro} main restricted universe multiverse
+      aptly mirror create -architectures="amd64" ${distro}-updates http://us.archive.ubuntu.com/ubuntu/ ${distro}-updates main restricted universe multiverse
+      aptly mirror create -architectures="amd64" ${distro}-security http://security.ubuntu.com/ubuntu/ ${distro}-security main restricted universe multiverse
+      aptly mirror create -architectures="amd64" ${distro}-backports http://us.archive.ubuntu.com/ubuntu/ ${distro}-backports main restricted universe multiverse
+   done
+}
+
 # remove snapshots
 remove_snapshots() {
    snapshot_date=$1
 
+   distros=(trusty xenial)
    for distro in ${distros[@]}; do
 
       # drop final and included snapshots
@@ -99,6 +111,9 @@ update_prod() {
 # script begins
 command=$1
 case $command in
+   initialmirrors)
+      create_initial_mirrors
+   ;;
    updatedev)
       update_from_remote_mirrors
       update_dev
