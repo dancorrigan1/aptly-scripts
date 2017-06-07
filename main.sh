@@ -16,7 +16,7 @@
 
 # usage
 usage() {
-   echo "usage: $0 initialmirrors, updatedev, updateprod, updatemirrors, removesnapshots YYYYMMDD"
+   echo "usage: $0 initialmirrors, updatemirrors, updatedev, updateprod, removesnapshots YYYYMMDD"
    exit 0
 }
 
@@ -35,7 +35,6 @@ newgraph() {
 # determine current dev snapshot date
 get_dev_current_publish_date() {
    aptly publish list|grep dev|egrep -o "xenial-final-[0-9]{8}"|awk -F"-" '{print $3}'
-#   aptly snapshot list -raw|egrep "[0-9]{8}"|grep -v php|grep -v ${date} |grep final|awk -F"-" '{print $3}'|sort|uniq
 }
 
 
@@ -73,11 +72,6 @@ remove_snapshots() {
 
    done
 }
-
-# publish snapshot directly
-
-#aptly publish snapshot -passphrase="${passphrase}" -distribution="${distro}" ${distro}-final-${date} dev
-
 
 # Create current date main distro snapshots
 update_dev() {
@@ -121,7 +115,10 @@ command=$1
 case $command in
    initialmirrors)
       create_initial_mirrors
+      update_from_remote_mirrors
       update_dev new
+      update_prod
+      newgraph
    ;;
    updatedev)
       update_from_remote_mirrors
