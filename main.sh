@@ -90,6 +90,7 @@ update_dev() {
       else
          exit 1
       fi
+
    done
 }
 
