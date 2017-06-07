@@ -32,12 +32,6 @@ newgraph() {
    aptly graph -layout="vertical" -format="png" -output="/vol1/aptly/public/current.png"
 }
 
-# determine current dev snapshot date
-get_dev_current_publish_date() {
-   aptly publish list|grep dev|egrep -o "xenial-final-[0-9]{8}"|awk -F"-" '{print $3}'
-}
-
-
 # Keep all mirrors up to date
 update_from_remote_mirrors() {
    for mirror in `aptly mirror list -raw`; do
