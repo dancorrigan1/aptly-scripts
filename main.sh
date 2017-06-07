@@ -75,11 +75,13 @@ remove_snapshots() {
 }
 
 # publish snapshot directly
+
 #aptly publish snapshot -passphrase="${passphrase}" -distribution="${distro}" ${distro}-final-${date} dev
 
 
 # Create current date main distro snapshots
 update_dev() {
+   new_or_existing=$1
    distros=(trusty xenial)
    for distro in ${distros[@]}; do
 
@@ -93,9 +95,15 @@ update_dev() {
       # merge todays snapshots into common "final" repo
       aptly snapshot merge -latest ${distro}-final-${date} ${distro}-main-${date} ${distro}-updates-${date} ${distro}-security-${date} ${distro}-backports-${date} ${distro}-zabbix-${date}
 
-      # switch published repos to new snapshot
-      aptly publish switch -passphrase="${passphrase}" ${distro} dev ${distro}-final-${date}
-
+      if [[ $new_or_existing == "existing" ]]; then
+         # switch published repos to new snapshot
+         aptly publish switch -passphrase="${passphrase}" ${distro} dev ${distro}-final-${date}
+      elif [[ $new_or_existing == "new" ]]; then
+         # create new published repo
+         aptly publish snapshot -passphrase="${passphrase}" -distribution="${distro}" ${distro}-final-${date} dev
+      else
+         exit 1
+      fi
    done
 }
 
@@ -113,10 +121,11 @@ command=$1
 case $command in
    initialmirrors)
       create_initial_mirrors
+      update_dev new
    ;;
    updatedev)
       update_from_remote_mirrors
-      update_dev
+      update_dev existing
       newgraph
    ;;
    updateprod)
