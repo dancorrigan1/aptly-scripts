@@ -46,7 +46,6 @@ create_initial_mirrors() {
       aptly mirror create -architectures="amd64" ${distro}-updates http://us.archive.ubuntu.com/ubuntu/ ${distro}-updates main restricted universe multiverse
       aptly mirror create -architectures="amd64" ${distro}-security http://security.ubuntu.com/ubuntu/ ${distro}-security main restricted universe multiverse
       aptly mirror create -architectures="amd64" ${distro}-backports http://us.archive.ubuntu.com/ubuntu/ ${distro}-backports main restricted universe multiverse
-      aptly mirror create -architectures="amd64" ${distro}-zabbix http://repo.zabbix.com/zabbix/3.2/ubuntu/ ${distro} main
 
    done
 }
@@ -64,7 +63,6 @@ remove_snapshots() {
       aptly snapshot drop ${distro}-updates-${snapshot_date}
       aptly snapshot drop ${distro}-security-${snapshot_date}
       aptly snapshot drop ${distro}-backports-${snapshot_date}
-      aptly snapshot drop ${distro}-zabbix-${snapshot_date}
 
    done
 }
@@ -80,10 +78,9 @@ update_dev() {
       aptly snapshot create ${distro}-updates-${date} from mirror ${distro}-updates
       aptly snapshot create ${distro}-security-${date} from mirror ${distro}-security
       aptly snapshot create ${distro}-backports-${date} from mirror ${distro}-backports
-      aptly snapshot create ${distro}-zabbix-${date} from mirror ${distro}-zabbix
 
       # merge todays snapshots into common "final" repo
-      aptly snapshot merge -latest ${distro}-final-${date} ${distro}-main-${date} ${distro}-updates-${date} ${distro}-security-${date} ${distro}-backports-${date} ${distro}-zabbix-${date}
+      aptly snapshot merge -latest ${distro}-final-${date} ${distro}-main-${date} ${distro}-updates-${date} ${distro}-security-${date} ${distro}-backports-${date}
 
       if [[ $new_or_existing == "existing" ]]; then
          # switch published repos to new snapshot
