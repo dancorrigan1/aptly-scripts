@@ -1,4 +1,3 @@
-#!/bin/bash
 ############################################################
 # main.sh
 # written by Daniel Corrigan <dancorrigan1@gmail.com>
@@ -11,12 +10,13 @@
 #
 # 20170606 - Initial creation
 # 20170607 - Added initialmirrors function
+# 20170608 - Added FORCE to initialmirrors
 #
 ##########################################################
 
 # usage
 usage() {
-   echo "usage: $0 initialmirrors, updatemirrors, updatedev, updateprod, removesnapshots YYYYMMDD"
+   echo "usage: $0 updatemirrors, updatedev, updateprod, removesnapshots YYYYMMDD, initialmirrors"
    exit 0
 }
 
@@ -25,7 +25,7 @@ if [ -z $1 ]; then usage; fi
 
 # date and passphrase
 date=`date +"%Y%m%d"`
-passphrase="ABCITSEASYAS123"
+passphrase="ABC123"
 
 # new graph
 newgraph() {
@@ -46,6 +46,8 @@ create_initial_mirrors() {
       aptly mirror create -architectures="amd64" ${distro}-updates http://us.archive.ubuntu.com/ubuntu/ ${distro}-updates main restricted universe multiverse
       aptly mirror create -architectures="amd64" ${distro}-security http://security.ubuntu.com/ubuntu/ ${distro}-security main restricted universe multiverse
       aptly mirror create -architectures="amd64" ${distro}-backports http://us.archive.ubuntu.com/ubuntu/ ${distro}-backports main restricted universe multiverse
+      aptly mirror create -architectures="amd64" ${distro}-zabbix http://repo.zabbix.com/zabbix/3.2/ubuntu/ ${distro} main
+
    done
 }
 
@@ -62,6 +64,7 @@ remove_snapshots() {
       aptly snapshot drop ${distro}-updates-${snapshot_date}
       aptly snapshot drop ${distro}-security-${snapshot_date}
       aptly snapshot drop ${distro}-backports-${snapshot_date}
+      aptly snapshot drop ${distro}-zabbix-${snapshot_date}
 
    done
 }
@@ -77,9 +80,10 @@ update_dev() {
       aptly snapshot create ${distro}-updates-${date} from mirror ${distro}-updates
       aptly snapshot create ${distro}-security-${date} from mirror ${distro}-security
       aptly snapshot create ${distro}-backports-${date} from mirror ${distro}-backports
+      aptly snapshot create ${distro}-zabbix-${date} from mirror ${distro}-zabbix
 
       # merge todays snapshots into common "final" repo
-      aptly snapshot merge -latest ${distro}-final-${date} ${distro}-main-${date} ${distro}-updates-${date} ${distro}-security-${date} ${distro}-backports-${date}
+      aptly snapshot merge -latest ${distro}-final-${date} ${distro}-main-${date} ${distro}-updates-${date} ${distro}-security-${date} ${distro}-backports-${date} ${distro}-zabbix-${date}
 
       if [[ $new_or_existing == "existing" ]]; then
          # switch published repos to new snapshot
@@ -90,7 +94,6 @@ update_dev() {
       else
          exit 1
       fi
-
    done
 }
 
@@ -105,13 +108,29 @@ update_prod() {
 
 # script begins
 command=$1
+argument=$2
 case $command in
    initialmirrors)
+   doit() {
       create_initial_mirrors
       update_from_remote_mirrors
       update_dev new
       update_prod
       newgraph
+   }
+   if [[ $argument == "FORCE" ]]; then
+      doit
+   else
+      echo -e "WARNING: This will build a completely from blank disk repo for xenial and trusty and 14.04 and 16.04.\nThis process will take over a day.\nYou can skip the this prompt by running: $0 initialmirrors FORCE" 
+      echo -n "You must type FORCE to run this command now: "
+      read argument
+      if [[ "$argument" == "FORCE" ]]; then
+         doit
+      else
+         echo "You must type FORCE."
+         exit 1
+      fi
+   fi
    ;;
    updatedev)
       update_from_remote_mirrors
@@ -126,11 +145,12 @@ case $command in
       update_from_remote_mirrors
    ;;
    removesnapshots)
-      if [ -z $2 ]; then echo "usage: $0 removesnaphots YYYYMMDD"; exit 0; fi
-      remove_snapshots $2
+      if [ -z $arugement ]; then echo "usage: $0 removesnaphots YYYYMMDD"; exit 0; fi
+      remove_snapshots $argument
       newgraph
    ;;
    *)
       usage
    ;;
 esac
+
