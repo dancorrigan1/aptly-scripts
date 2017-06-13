@@ -4,14 +4,11 @@
 # written by Daniel Corrigan <dancorrigan1@gmail.com>
 # This script peforms a few tasks.
 #
+# create new xenial, trusty, 14.04, 16.04 aptly mirrors from scratch
 # update apt mirrors from remote
 # create new snapshots
 # switch existing pubished repos to new snapshots
 # clean up old snapshots
-#
-# 20170606 - Initial creation
-# 20170607 - Added initialmirrors function
-# 20170608 - Added FORCE to initialmirrors
 #
 ##########################################################
 
