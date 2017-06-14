@@ -125,8 +125,8 @@ update_dev() {
 # switch published prod to current dev snapshot
 update_prod() {
    dev_current_publish_date=`aptly publish list|grep dev|egrep -o "xenial-final-[0-9]{8}"|awk -F"-" '{print $3}'`
-   log_and_echo "Publish Switching PROD ${distro} to DEV snapshot ${distro}-final-${dev_current_publish_date}"
    distros=(trusty xenial)
+   log_and_echo "Publish Switching PROD ${distro} to DEV snapshot ${distro}-final-${dev_current_publish_date}"
    for distro in ${distros[@]}; do
       aptly publish switch -passphrase="${passphrase}" ${distro} prod ${distro}-final-${dev_current_publish_date} > /dev/null
    done
